@@ -5,6 +5,9 @@ class Pendulum:
     def __init__(self, x, y, color, space):
         self.x = x
         self.y = y
+        self.initial_x = self.x
+        self.initial_y = self.y
+        self.initial_angle = 0
         self.color = color
         self.radius = 40
         self.rod_length = -255
@@ -15,7 +18,7 @@ class Pendulum:
 
         # Create the pendulum body
         self.body = pymunk.Body()
-        self.body.position = (self.x, self.y)
+        self.body.position = self.rotation_center_body.position
 
         # Define the rod and bob of the pendulum
         self.rod = pymunk.Segment(self.body, (0, 0), (0, self.rod_length), 5)
@@ -47,6 +50,7 @@ class Pendulum:
 
     def move(self, move):
         self.rotation_center_body.position += (move, 0)
+        # self.body.position = self.rotation_center_body.position
 
 
     def update(self):
@@ -56,6 +60,21 @@ class Pendulum:
         # if pygame.key.get_pressed()[pygame.K_RIGHT]:
         #     self.rotation_center_body.position += (self.force_magnitude, 0)
         pass
+
+
+
+    def reset(self):
+        # Reset the position and angle
+        self.body.position = (self.initial_x, self.initial_y)
+        self.body.velocity = (0, 0)
+        self.body.angular_velocity = 0
+        self.body.angle = self.initial_angle
+
+        # Reset the pivot position
+        self.rotation_center_body.position = (self.initial_x, self.initial_y)
+
+
+
 
     def draw(self, surface):
         # Offset used when creating the circle

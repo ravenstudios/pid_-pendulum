@@ -35,7 +35,7 @@ pid = PID_controller.PID_Controller(sp, p, i, d, -10000, 10000)
 
 def main():
     running = True
-
+    global pendulum
     while running:
 
         clock.tick(TICK_RATE)
@@ -49,12 +49,12 @@ def main():
             if event.type == pygame.KEYDOWN:
                 keys = pygame.key.get_pressed()
                 if event.key == pygame.K_r:
-                    pass
+                    pendulum.reset()
                 if event.key == pygame.K_q:
                     running = False
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            pendulum.body.apply_impulse_at_local_point((10, 0), (0, -255))
+        # if event.type == pygame.MOUSEBUTTONDOWN:
+        #     pendulum.body.apply_impulse_at_local_point((10, 0), (0, -255))
 
 
         draw()
