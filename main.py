@@ -1,10 +1,11 @@
 from constants import *
 import pymunk
+import pymunk.pygame_util
 import pygame
 
 import ball
 import solid
-
+import wall
 import pendulum
 
 import ui
@@ -17,12 +18,16 @@ clock = pygame.time.Clock()
 
 
 space = pymunk.Space()
-space.gravity = (0, 1000)
+space.gravity = (0, 981)  # Example for Earth-like gravity, adjust as needed
+
 static_body = space.static_body
 
+options = pymunk.pygame_util.DrawOptions(surface)
 
-pendulum = pendulum.Pendulum(400, 550, RED, space)
 
+pendulum = pendulum.Pendulum(600, 600, RED, space)
+left_wall = wall.Wall((0, 0, 20, GAME_HEIGHT), WHITE, space)
+right_wall = wall.Wall((GAME_WIDTH - 20, 0, 20, GAME_HEIGHT), WHITE, space)
 
 
 ui = ui.UI(surface)
@@ -69,8 +74,8 @@ def main():
 def draw():
     surface.fill((75, 75, 75))#background
 
-    pendulum.draw(surface)
-
+    # pendulum.draw(surface)
+    space.debug_draw(options)
     # pygame.display.update()
 
 

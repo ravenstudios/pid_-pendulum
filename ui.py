@@ -10,10 +10,10 @@ class UI():
     def __init__(self, surface):
 
 
-        self.set_point_slider = Slider(surface, 100, 50, 200, 20, min=0, max=359, step=1, initial=0)
-        self.p_slider = Slider(surface, 100, 100, 200, 20, min=0, max=10, step=0.1, initial=0)
-        self.i_slider = Slider(surface, 100, 150, 200, 20, min=0, max=5, step=0.01, initial=0)
-        self.d_slider = Slider(surface, 100, 200, 200, 20, min=0, max=1, step=0.01, initial=0)
+        self.set_point_slider = Slider(surface, 100, 50, 200, 20, min=-5, max=5, step=0.5, initial=0)
+        self.p_slider = Slider(surface, 100, 100, 200, 20, min=0, max=10, step=0.1, initial=5)
+        self.i_slider = Slider(surface, 100, 150, 200, 20, min=0, max=10, step=0.01, initial=5)
+        self.d_slider = Slider(surface, 100, 200, 200, 20, min=0, max=10, step=0.01, initial=1)
 
 
         self.set_point_gain = TextBox(surface, 350, 35, 250, 50, fontSize=30)
@@ -54,8 +54,8 @@ class UI():
         ]
 
     def update_pid_values(self, values):
-        self.p_output.setText(f"P Output: {values["P"]:0.2f}")
-        self.i_output.setText(f"I Output: {values["I"]:0.2f}")
-        self.d_output.setText(f"D Output: {values["D"]:0.2f}")
-        self.out_output.setText(f" Output: {values["output"]:0.2f}")
-        self.error.setText(f" Error: {values["error"]:0.2f}")
+        self.p_output.setText(f"P Output: {values['P']:0.2f}")
+        self.i_output.setText(f"I Output: {values['I']:0.2f}")
+        self.d_output.setText(f"D Output: {values['D']:0.2f}")
+        self.out_output.setText(f" Output: {values['output']:0.2f}")
+        self.error.setText(f" Error: {values['error']:0.2f}")

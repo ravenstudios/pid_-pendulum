@@ -1,5 +1,9 @@
 import pygame
 import pymunk
+from constants import *
+import math
+
+
 
 class Pendulum:
     def __init__(self, x, y, color, space):
@@ -28,15 +32,15 @@ class Pendulum:
         self.rod.friction = 1
         self.bob.friction = 1
         self.rod.mass = 1
-        self.bob.mass = 10
-        self.bob.elasticity = 0.95
+        self.bob.mass = 100
+        # self.bob.elasticity = 0.95
 
         # Attach the pendulum to the pivot using a pin joint
-        self.rotation_center_joint = pymunk.PinJoint(self.body, self.rotation_center_body, (0, 0), (0, 0))
-        space.add(self.body, self.rod, self.bob, self.rotation_center_joint)
+        self.rotation_center_joint = pymunk.PivotJoint(self.body, self.rotation_center_body, (0, 0), (0, 0))
+        space.add(self.body, self.rod, self.bob, self.rotation_center_joint, self.rotation_center_body)
 
         # Control parameters
-        self.force_magnitude = 1.0  # Force magnitude to apply
+        self.force_magnitude = 100000.0  # Force magnitude to apply
         self.setpoint_angle = 0
 
 
@@ -45,34 +49,43 @@ class Pendulum:
 
 
     def get_current_angle(self):
-        return self.body.angle
+        angle_degrees = math.degrees(self.body.angle)
+        return ((angle_degrees + 180) % 360) - 180
 
 
     def move(self, move):
-        self.rotation_center_body.position += (move, 0)
+        self.rotation_center_body.position += (-move, 0)
         # self.body.position = self.rotation_center_body.position
-
+        # self.body.apply_force_at_local_point((move, 0), (0, self.rod_length))
 
     def update(self):
-        # # Example control: Move left or right
-        # if pygame.key.get_pressed()[pygame.K_LEFT]:
-        #     self.rotation_center_body.position -= (self.force_magnitude, 0)
-        # if pygame.key.get_pressed()[pygame.K_RIGHT]:
-        #     self.rotation_center_body.position += (self.force_magnitude, 0)
-        pass
+        # Example control: Move left or right
+        if pygame.key.get_pressed()[pygame.K_LEFT]:
+            # self.rotation_center_body.position -= (self.force_magnitude, 0)
+            self.body.apply_force_at_local_point((-self.force_magnitude, 0), (0, self.rod_length))
+        if pygame.key.get_pressed()[pygame.K_RIGHT]:
+            # self.rotation_center_body.position += (self.force_magnitude, 0)
+            self.body.apply_force_at_local_point((self.force_magnitude, 0), (0, self.rod_length))
+        # Screen constraints
+        x = max(0, min(self.rotation_center_body.position.x, GAME_WIDTH))
+        y = self.rotation_center_body.position.y
+        self.rotation_center_body.position = (x, y)
 
+        # Angle constraints
+        # max_angle = 45 * (math.pi / 180)  # 45 degrees in radians
+        # self.body.angle = max(-max_angle, min(self.body.angle, max_angle))
 
 
     def reset(self):
         # Reset the position and angle
-        self.body.position = (self.initial_x, self.initial_y)
+        # self.body.position = (self.initial_x, self.initial_y)
         self.body.velocity = (0, 0)
         self.body.angular_velocity = 0
         self.body.angle = self.initial_angle
 
         # Reset the pivot position
         self.rotation_center_body.position = (self.initial_x, self.initial_y)
-
+        self.body.position = self.rotation_center_body.position
 
 
 
@@ -91,7 +104,7 @@ class Pendulum:
         pygame.draw.circle(surface, self.color, self.center, self.radius, width=0)
 
         # Draw Pivot
-        self.center = (int(self.body.position.x), int(self.body.position.y))
+        self.center = (int(self.rotation_center_body.position.x), int(self.rotation_center_body.position.y))
         pygame.draw.circle(surface, self.color, self.center, self.radius / 2, width=0)
 
         # Draw rod
@@ -103,4 +116,4 @@ class Pendulum:
         rod_end_int = (int(rod_end.x), int(rod_end.y))
 
         # Draw the line representing the rod
-        pygame.draw.line(surface, self.color, rod_start_int, rod_end_int, int(self.rod.radius))
+        pygame.draw.line(surface, BLUE, rod_start_int, rod_end_int, int(self.rod.radius))
