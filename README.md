@@ -1,5 +1,5 @@
 
-# To Install And Run
+## To Install And Run
 
 Clone Repo:
 ```
@@ -17,3 +17,8 @@ Run:
 ```
 python3 main.py
 ```
+
+## Instructions: 
+Use arrow keys to apply a force to the pendulum.
+User 'R' to reset pendulum position.
+If sim is out of control, close and restart sim.
