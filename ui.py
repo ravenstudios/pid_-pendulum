@@ -11,9 +11,9 @@ class UI():
 
 
         self.set_point_slider = Slider(surface, 100, 50, 200, 20, min=-5, max=5, step=0.5, initial=0)
-        self.p_slider = Slider(surface, 100, 100, 200, 20, min=0, max=10, step=0.1, initial=5)
-        self.i_slider = Slider(surface, 100, 150, 200, 20, min=0, max=10, step=0.01, initial=5)
-        self.d_slider = Slider(surface, 100, 200, 200, 20, min=0, max=10, step=0.01, initial=1)
+        self.p_slider = Slider(surface, 100, 100, 200, 20, min=0, max=10, step=0.1, initial=0)
+        self.i_slider = Slider(surface, 100, 150, 200, 20, min=0, max=5, step=0.1, initial=0)
+        self.d_slider = Slider(surface, 100, 200, 200, 20, min=0, max=3, step=0.11, initial=0)
 
 
         self.set_point_gain = TextBox(surface, 350, 35, 250, 50, fontSize=30)

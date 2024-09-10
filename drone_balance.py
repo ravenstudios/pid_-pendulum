@@ -5,7 +5,7 @@ import math
 import random
 
 
-class Pendulum:
+class Drone_balance:
     def __init__(self, x, y, color, space):
         self.x = x
         self.y = y
@@ -14,7 +14,8 @@ class Pendulum:
         self.initial_angle = 0
         self.color = color
         self.radius = 40
-        self.rod_length = -255
+        self.left_arm_length = -255
+        self.right_arm_length = 255
 
         # Create the pivot (rotation center)
         self.rotation_center_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
@@ -24,23 +25,36 @@ class Pendulum:
         self.body = pymunk.Body()
         self.body.position = self.rotation_center_body.position
 
-        # Define the rod and bob of the pendulum
-        self.rod = pymunk.Segment(self.body, (0, 0), (0, self.rod_length), 5)
-        self.bob = pymunk.Circle(self.body, self.radius, (0, self.rod_length))
+        # Define the left_arm and bob of the pendulum
+        self.left_arm = pymunk.Segment(self.body, (0, 0), (self.left_arm_length, 0), 5)
+        self.left_motor = pymunk.Circle(self.body, self.radius, (self.left_arm_length, 0))
 
         # Set physics properties
-        self.rod.friction = 100
-        self.bob.friction = 100
-        self.rod.mass = 1
-        self.bob.mass = 10000
-        self.bob.elasticity = 0.95
+        # self.left_arm.friction = 100
+        # self.left_motor.friction = 100
+        self.left_arm.mass = 1
+        self.left_motor.mass = 10000
+        self.left_motor.elasticity = 0.90
+
+
+        self.right_arm = pymunk.Segment(self.body, (0, 0), (self.right_arm_length, 0), 5)
+        self.right_motor = pymunk.Circle(self.body, self.radius, (self.right_arm_length, 0))
+
+        # Set physics properties
+        # self.right_arm.friction = 100
+        # self.right_motor.friction = 100
+        self.right_arm.mass = 10
+        self.right_motor.mass = 10000
+        self.right_motor.elasticity = 0.90
+
+
 
         # Attach the pendulum to the pivot using a pin joint
         self.rotation_center_joint = pymunk.PivotJoint(self.body, self.rotation_center_body, (0, 0), (0, 0))
-        space.add(self.body, self.rod, self.bob, self.rotation_center_joint, self.rotation_center_body)
+        space.add(self.body, self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.rotation_center_body)
 
         # Control parameters
-        self.force_magnitude = 10000000.0  # Force magnitude to apply
+        self.force_magnitude = 100000000.0  # Force magnitude to apply
         self.setpoint_angle = 0
 
 
@@ -54,28 +68,31 @@ class Pendulum:
 
 
     def move(self, move):
-        self.rotation_center_body.position += (-move, 0)
-        # self.body.position = self.rotation_center_body.position
-        # self.body.apply_force_at_local_point((move, 0), (0, self.rod_length))
+        print(move)
+        if self.body.position.y > GAME_HEIGHT // 3:
+            if move > 0:
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.left_arm_length, 0))
+            else:
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.right_arm_length, 0))
+
+
 
     def update(self):
         # Example control: Move left or right
+
+
         if pygame.key.get_pressed()[pygame.K_LEFT]:
             # self.rotation_center_body.position -= (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((-self.force_magnitude, 0), (0, self.rod_length))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.left_arm_length, 0))
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             # self.rotation_center_body.position += (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((self.force_magnitude, 0), (0, self.rod_length))
-        # Screen constraints
-        x = max(0, min(self.rotation_center_body.position.x, GAME_WIDTH))
-        y = self.rotation_center_body.position.y
-        self.rotation_center_body.position = (x, y)
+            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.right_arm_length, 0))
 
-        # Angle constraints
-        # max_angle = 45 * (math.pi / 180)  # 45 degrees in radians
-        # self.body.angle = max(-max_angle, min(self.body.angle, max_angle))
-        rdm_movment = random.randint(-self.force_magnitude, self.force_magnitude)
-        self.body.apply_force_at_local_point((rdm_movment, 0), (0, self.rod_length))
+        if self.body.position.y > GAME_HEIGHT  * 0.7:
+            self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.left_arm_length, 0))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.right_arm_length, 0))
+
+
 
     def reset(self):
         # Reset the position and angle
@@ -92,7 +109,7 @@ class Pendulum:
 
     def draw(self, surface):
         # Offset used when creating the circle
-        offset = pymunk.Vec2d(0, self.rod_length)
+        offset = pymunk.Vec2d(0, self.left_arm_length)
 
         # Rotate the offset by the body's current angle
         rotated_offset = offset.rotated(self.body.angle)
@@ -108,13 +125,13 @@ class Pendulum:
         self.center = (int(self.rotation_center_body.position.x), int(self.rotation_center_body.position.y))
         pygame.draw.circle(surface, self.color, self.center, self.radius / 2, width=0)
 
-        # Draw rod
-        rod_start = self.body.position + self.rod.a.rotated(self.body.angle)
-        rod_end = self.body.position + self.rod.b.rotated(self.body.angle)
+        # Draw left_arm
+        left_arm_start = self.body.position + self.left_arm.a.rotated(self.body.angle)
+        left_arm_end = self.body.position + self.left_arm.b.rotated(self.body.angle)
 
         # Convert to integers for pygame
-        rod_start_int = (int(rod_start.x), int(rod_start.y))
-        rod_end_int = (int(rod_end.x), int(rod_end.y))
+        left_arm_start_int = (int(left_arm_start.x), int(left_arm_start.y))
+        left_arm_end_int = (int(left_arm_end.x), int(left_arm_end.y))
 
-        # Draw the line representing the rod
-        pygame.draw.line(surface, BLUE, rod_start_int, rod_end_int, int(self.rod.radius))
+        # Draw the line representing the left_arm
+        pygame.draw.line(surface, BLUE, left_arm_start_int, left_arm_end_int, int(self.left_arm.radius))
