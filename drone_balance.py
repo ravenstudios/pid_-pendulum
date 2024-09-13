@@ -14,52 +14,34 @@ class Drone_balance:
         self.initial_angle = 0
         self.color = color
         self.radius = 40
-        self.left_arm_length = -255
-        self.right_arm_length = 255
+        self.arm_length = 255
 
-        # Create the pivot (rotation center)
-        self.rotation_center_body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
-        self.rotation_center_body.position = (self.x, self.y)
 
-        # Create the pendulum body
         self.body = pymunk.Body()
-        self.body.position = self.rotation_center_body.position
-
+        self.body.position = (self.x, self.y)
+        self.body_vis = pymunk.Circle(self.body, self.radius // 2, (0, 0))
         # Define the left_arm and bob of the pendulum
-        self.left_arm = pymunk.Segment(self.body, (0, 0), (self.left_arm_length, 0), 5)
-        self.left_motor = pymunk.Circle(self.body, self.radius, (self.left_arm_length, 0))
-
-        # Set physics properties
-        # self.left_arm.friction = 100
-        # self.left_motor.friction = 100
-        self.left_arm.mass = 1
-        self.left_motor.mass = 10000
-        self.left_motor.elasticity = 0.90
+        self.left_arm = pymunk.Segment(self.body, (0, 0), (-self.arm_length, 0), 5)
+        self.left_motor = pymunk.Circle(self.body, self.radius, (-self.arm_length, 0))
+        self.left_arm.mass = 10
+        self.left_motor.mass = 100
+        self.left_motor.elasticity = 0.3
+        self.left_motor.friction = 0
 
 
-        self.right_arm = pymunk.Segment(self.body, (0, 0), (self.right_arm_length, 0), 5)
-        self.right_motor = pymunk.Circle(self.body, self.radius, (self.right_arm_length, 0))
-
-        # Set physics properties
-        # self.right_arm.friction = 100
-        # self.right_motor.friction = 100
+        self.right_arm = pymunk.Segment(self.body, (0, 0), (self.arm_length, 0), 5)
+        self.right_motor = pymunk.Circle(self.body, self.radius, (self.arm_length, 0))
         self.right_arm.mass = 10
-        self.right_motor.mass = 10000
-        self.right_motor.elasticity = 0.90
+        self.right_motor.mass = 100
+        self.right_motor.elasticity = 0.3
+        self.right_motor.friction = 0
 
-
-
-        # Attach the pendulum to the pivot using a pin joint
-        self.rotation_center_joint = pymunk.PivotJoint(self.body, self.rotation_center_body, (0, 0), (0, 0))
-        space.add(self.body, self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.rotation_center_body)
+        space.add(self.body, self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.body_vis)
 
         # Control parameters
-        self.force_magnitude = 100000000.0  # Force magnitude to apply
+        self.force_magnitude = 1000000.0  # Force magnitude to apply
         self.setpoint_angle = 0
 
-
-    def set_setpoint_angle(self, sp):
-        self.setpoint_angle = sp
 
 
     def get_current_angle(self):
@@ -67,13 +49,21 @@ class Drone_balance:
         return ((angle_degrees + 180) % 360) - 180
 
 
-    def move(self, move):
-        print(move)
+    def balance(self, move):
         if self.body.position.y > GAME_HEIGHT // 3:
             if move > 0:
-                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.left_arm_length, 0))
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (-self.arm_length, 0))
             else:
-                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.right_arm_length, 0))
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.arm_length, 0))
+
+
+
+    def altHold_move(self, move):
+        # Clamp to a negitive number, if positive, drone gets stuck and wont fall back down
+        move = min(0, move)
+        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10000), (self.arm_length, 0))
+        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10000), (-self.arm_length, 0))
+
 
 
 
@@ -83,14 +73,14 @@ class Drone_balance:
 
         if pygame.key.get_pressed()[pygame.K_LEFT]:
             # self.rotation_center_body.position -= (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.left_arm_length, 0))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude), (-self.arm_length, 0))
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             # self.rotation_center_body.position += (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.right_arm_length, 0))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.arm_length, 0))
 
-        if self.body.position.y > GAME_HEIGHT  * 0.7:
-            self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.left_arm_length, 0))
-            self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.right_arm_length, 0))
+        # if self.body.position.y > GAME_HEIGHT  * 0.7:
+        #     self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.left_arm_length, 0))
+        #     self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.right_arm_length, 0))
 
 
 
@@ -102,8 +92,7 @@ class Drone_balance:
         self.body.angle = self.initial_angle
 
         # Reset the pivot position
-        self.rotation_center_body.position = (self.initial_x, self.initial_y)
-        self.body.position = self.rotation_center_body.position
+        self.body.position = (self.initial_x, self.initial_y)
 
 
 

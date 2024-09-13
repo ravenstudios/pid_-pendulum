@@ -18,22 +18,33 @@ clock = pygame.time.Clock()
 
 
 space = pymunk.Space()
-space.gravity = (0, 1981)  # Example for Earth-like gravity, adjust as needed
+space.gravity = (0, 10000)  # Example for Earth-like gravity, adjust as needed
 
 static_body = space.static_body
 
 options = pymunk.pygame_util.DrawOptions(surface)
 
 
-drone_balance = drone_balance.Drone_balance(600, 600, RED, space)
+drone_balance = drone_balance.Drone_balance(600, 1000, RED, space)
 left_wall = wall.Wall((0, 0, 20, GAME_HEIGHT), WHITE, space)
 right_wall = wall.Wall((GAME_WIDTH - 20, 0, 20, GAME_HEIGHT), WHITE, space)
 top_wall = wall.Wall((0, 0, GAME_WIDTH, 20), WHITE, space)
 bottom_wall = wall.Wall((0, GAME_HEIGHT - 20, GAME_WIDTH, GAME_HEIGHT), WHITE, space)
 
+# Min, Max, step, Init
+blance_pid_slider_values = [
+    [-5, 5, 0.5, 0],#Setpoint
+    [0, 10, 0.1, 0],#P
+    [0, 5, 0.1, 0],#I
+    [0, 3, 0.1, 0]#D
+    ]
 
-blance_pid_slider_values = [[-5, 5, 0.5, 0], [0, 10, 0.1, 0], [0, 5, 0.1, 0], [0, 3, 0.1, 0]]
-althold_pid_slider_values = [[0, GAME_HEIGHT, 1, GAME_HEIGHT // 2], [0, 10, 0.1, 0], [0, 5, 0.1, 0], [0, 3, 0.1, 0]]
+althold_pid_slider_values = [
+    [0, GAME_HEIGHT, 1, GAME_HEIGHT // 2],#Setpoint
+    [0, 200, 0.1, 50],#P
+    [0, 50, 0.1, 0],#I
+    [0, 30, 0.1, 0]#D
+    ]
 
 balance_pid_ui = ui.UI(surface, 50, 50, "Balance Pid", blance_pid_slider_values)
 althold_pid_ui = ui.UI(surface, 600, 50, "Althold Pid", althold_pid_slider_values)
@@ -87,23 +98,37 @@ def draw():
 
 
 def update(events):
+    pygame.display.set_caption(f"Drone Y:{drone_balance.body.position.y:0.2f}")
     drone_balance.update()
     althold_pid_ui.update(events)
     balance_pid_ui.update(events)
 
-
-    # if ui.toggle_pid.getValue():
-    if True:
-
-        # sp, p, i, d = balance_pid_ui.get_values()
-        values = balance_pid_ui.get_values()
-        balance_pid.update_pid(values)
-        drone_balance.set_setpoint_angle(values[0])
+    delta_time = clock.tick(TICK_RATE) / 1000.0
 
 
-        values = balance_pid.calc(drone_balance.get_current_angle(), clock.tick(60) / 1000.0)
-        balance_pid_ui.update_pid_values(values)
-        drone_balance.move(values["output"])
+    # Update pid settings from the UI
+    balance_pid.update_pid(balance_pid_ui.get_values())
+    # Calculate pid output
+    balance_pid_output = balance_pid.calc(drone_balance.get_current_angle(), delta_time)
+    # Update UI pid output
+    balance_pid_ui.update_pid_values(balance_pid_output)
+
+    if balance_pid_ui.toggle_pid.getValue():
+        # Balance Drone
+        drone_balance.balance(balance_pid_output["output"])
+
+
+
+    # Update pid settings from the UI
+    althold_pid.update_pid(althold_pid_ui.get_values())
+    # Calculate pid output
+    althold_pid_output = althold_pid.calc(drone_balance.body.position.y, delta_time)
+    # Update UI pid output
+    althold_pid_ui.update_pid_values(althold_pid_output)
+
+    if althold_pid_ui.toggle_pid.getValue():
+        # Balance Drone
+        drone_balance.altHold_move(althold_pid_output["output"])
 
 
 
