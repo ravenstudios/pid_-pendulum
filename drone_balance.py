@@ -13,6 +13,11 @@ class Drone_balance:
         self.initial_y = self.y
         self.initial_angle = 0
         self.color = color
+
+
+        self.max_vel = 200
+
+
         self.radius = 40
         self.arm_length = 255
 
@@ -39,7 +44,7 @@ class Drone_balance:
         space.add(self.body, self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.body_vis)
 
         # Control parameters
-        self.force_magnitude = 1000000.0  # Force magnitude to apply
+        self.force_magnitude = 10000.0  # Force magnitude to apply
         self.setpoint_angle = 0
 
 
@@ -52,17 +57,17 @@ class Drone_balance:
     def balance(self, move):
         if self.body.position.y > GAME_HEIGHT // 3:
             if move > 0:
-                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (-self.arm_length, 0))
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude), (-self.arm_length, 0))
             else:
-                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10), (self.arm_length, 0))
+                self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude), (self.arm_length, 0))
 
 
 
     def altHold_move(self, move):
         # Clamp to a negitive number, if positive, drone gets stuck and wont fall back down
-        move = min(0, move)
-        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10000), (self.arm_length, 0))
-        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude // 10000), (-self.arm_length, 0))
+        move = min(max(0, move), self.max_vel)
+        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude), (self.arm_length, 0))
+        self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude), (-self.arm_length, 0))
 
 
 
@@ -73,10 +78,10 @@ class Drone_balance:
 
         if pygame.key.get_pressed()[pygame.K_LEFT]:
             # self.rotation_center_body.position -= (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((0, -self.force_magnitude), (-self.arm_length, 0))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude * 300), (-self.arm_length, 0))
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             # self.rotation_center_body.position += (self.force_magnitude, 0)
-            self.body.apply_force_at_local_point((0, -self.force_magnitude), (self.arm_length, 0))
+            self.body.apply_force_at_local_point((0, -self.force_magnitude * 300), (self.arm_length, 0))
 
         # if self.body.position.y > GAME_HEIGHT  * 0.7:
         #     self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.left_arm_length, 0))

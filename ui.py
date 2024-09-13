@@ -27,7 +27,7 @@ class UI():
         self.set_point_slider = Slider(surface, self.x, (self.y + self.slider_y_gap), self.width, self.height, min=slider_values[0][0], max=slider_values[0][1], step=slider_values[0][2], initial=slider_values[0][3])
         self.p_slider = Slider(surface, self.x, (self.y + self.slider_y_gap) + (self.y_gap * 1), self.width, self.height, min=slider_values[1][0], max=slider_values[1][1], step=slider_values[1][2], initial=slider_values[1][3])
         self.i_slider = Slider(surface, self.x, (self.y + self.slider_y_gap) + (self.y_gap * 2), self.width, self.height, min=slider_values[2][0], max=slider_values[2][1], step=slider_values[2][2], initial=slider_values[2][3])
-        self.d_slider = Slider(surface, self.x, (self.y + self.slider_y_gap) + (self.y_gap * 3), self.width, self.height, min=slider_values[3][0], max=slider_values[3][1], step=slider_values[3][2], initial=slider_values[2][3])
+        self.d_slider = Slider(surface, self.x, (self.y + self.slider_y_gap) + (self.y_gap * 3), self.width, self.height, min=slider_values[3][0], max=slider_values[3][1], step=slider_values[3][2], initial=slider_values[3][3])
 
 
         self.set_point_gain = TextBox(surface, self.x + self.x_gap, self.y + (self.y_gap * 0), self.txt_length, self.txt_height, fontSize=self.font_size)

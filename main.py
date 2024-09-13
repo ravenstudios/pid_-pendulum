@@ -25,7 +25,7 @@ static_body = space.static_body
 options = pymunk.pygame_util.DrawOptions(surface)
 
 
-drone_balance = drone_balance.Drone_balance(600, 1000, RED, space)
+drone_balance = drone_balance.Drone_balance(600, 700, RED, space)
 left_wall = wall.Wall((0, 0, 20, GAME_HEIGHT), WHITE, space)
 right_wall = wall.Wall((GAME_WIDTH - 20, 0, 20, GAME_HEIGHT), WHITE, space)
 top_wall = wall.Wall((0, 0, GAME_WIDTH, 20), WHITE, space)
@@ -33,17 +33,17 @@ bottom_wall = wall.Wall((0, GAME_HEIGHT - 20, GAME_WIDTH, GAME_HEIGHT), WHITE, s
 
 # Min, Max, step, Init
 blance_pid_slider_values = [
-    [-5, 5, 0.5, 0],#Setpoint
-    [0, 10, 0.1, 0],#P
+    [-10, 10, 0.5, 0],#Setpoint
+    [0, 10, 0.1, 11],#P
     [0, 5, 0.1, 0],#I
-    [0, 3, 0.1, 0]#D
+    [0, 3, 0.1, 1]#D
     ]
 
 althold_pid_slider_values = [
     [0, GAME_HEIGHT, 1, GAME_HEIGHT // 2],#Setpoint
-    [0, 200, 0.1, 50],#P
-    [0, 50, 0.1, 0],#I
-    [0, 30, 0.1, 0]#D
+    [0, 10, 0.01, 5],#P
+    [0, 1, 0.01, 0.25],#I
+    [0, 1, 0.01, 0.25]#D
     ]
 
 balance_pid_ui = ui.UI(surface, 50, 50, "Balance Pid", blance_pid_slider_values)
@@ -122,7 +122,7 @@ def update(events):
     # Update pid settings from the UI
     althold_pid.update_pid(althold_pid_ui.get_values())
     # Calculate pid output
-    althold_pid_output = althold_pid.calc(drone_balance.body.position.y, delta_time)
+    althold_pid_output = althold_pid.calc(GAME_HEIGHT - drone_balance.body.position.y, delta_time)
     # Update UI pid output
     althold_pid_ui.update_pid_values(althold_pid_output)
 
