@@ -31,13 +31,18 @@ right_wall = wall.Wall((GAME_WIDTH - 20, 0, 20, GAME_HEIGHT), WHITE, space)
 top_wall = wall.Wall((0, 0, GAME_WIDTH, 20), WHITE, space)
 bottom_wall = wall.Wall((0, GAME_HEIGHT - 20, GAME_WIDTH, GAME_HEIGHT), WHITE, space)
 
-ui = ui.UI(surface)
 
-sp, p, i, d = ui.get_values()
+blance_pid_slider_values = [[-5, 5, 0.5, 0], [0, 10, 0.1, 0], [0, 5, 0.1, 0], [0, 3, 0.1, 0]]
+althold_pid_slider_values = [[0, GAME_HEIGHT, 1, GAME_HEIGHT // 2], [0, 10, 0.1, 0], [0, 5, 0.1, 0], [0, 3, 0.1, 0]]
+
+balance_pid_ui = ui.UI(surface, 50, 50, "Balance Pid", blance_pid_slider_values)
+althold_pid_ui = ui.UI(surface, 600, 50, "Althold Pid", althold_pid_slider_values)
+
+# sp, p, i, d = balance_pid_ui.get_values()
 
 
-pid = PID_controller.PID_Controller(sp, p, i, d, -10000, 10000)
-
+balance_pid = PID_controller.PID_Controller(balance_pid_ui.get_values(), -10000, 10000)
+althold_pid = PID_controller.PID_Controller(althold_pid_ui.get_values(), -10000, 10000)
 
 def main():
     running = True
@@ -83,15 +88,21 @@ def draw():
 
 def update(events):
     drone_balance.update()
-    ui.update(events)
+    althold_pid_ui.update(events)
+    balance_pid_ui.update(events)
+
 
     # if ui.toggle_pid.getValue():
     if True:
-        sp, p, i, d = ui.get_values()
-        pid.update_pid(sp, p, i, d)
-        drone_balance.set_setpoint_angle(sp)
-        values = pid.calc(drone_balance.get_current_angle(), clock.tick(60) / 1000.0)
-        ui.update_pid_values(values)
+
+        # sp, p, i, d = balance_pid_ui.get_values()
+        values = balance_pid_ui.get_values()
+        balance_pid.update_pid(values)
+        drone_balance.set_setpoint_angle(values[0])
+
+
+        values = balance_pid.calc(drone_balance.get_current_angle(), clock.tick(60) / 1000.0)
+        balance_pid_ui.update_pid_values(values)
         drone_balance.move(values["output"])
 
 

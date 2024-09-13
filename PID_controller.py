@@ -1,11 +1,11 @@
 class PID_Controller(object):
     """docstring for PID_Controller."""
 
-    def __init__(self, setpoint, kp, ki, kd, output_min, output_max):
-        self.kp = kp  # Proportional gain
-        self.ki = ki  # Integral gain
-        self.kd = kd  # Derivative gain
-        self.setpoint = setpoint  # Desired value
+    def __init__(self, values, output_min, output_max):
+        self.kp = values[1]  # Proportional gain
+        self.ki = values[2]  # Integral gain
+        self.kd = values[3]  # Derivative gain
+        self.setpoint = values[0]  # Desired value
         self.output_min = output_min
         self.output_max = output_max
 
@@ -22,11 +22,11 @@ class PID_Controller(object):
 
 
 
-    def update_pid(self, setpoint, kp, ki, kd):
-        self.kp = kp  # Proportional gain
-        self.ki = ki  # Integral gain
-        self.kd = kd  # Derivative gain
-        self.setpoint = setpoint  # Desired value
+    def update_pid(self, values):
+        self.kp = values[1]  # Proportional gain
+        self.ki = values[2]  # Integral gain
+        self.kd = values[3]  # Derivative gain
+        self.setpoint = values[0]  # Desired value
 
 
     def calc(self, current_value, dt):
