@@ -3,17 +3,25 @@ import pymunk
 import pymunk.pygame_util
 import pygame
 
-import ball
-import solid
-import wall
+import walls
 import drone_balance
-
 import ui
 import PID_controller
 
-surface = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
+
 
 pygame.init()
+
+
+screen_info = pygame.display.Info()
+screen_width = int(screen_info.current_w)
+screen_height = int(screen_info.current_h)
+
+
+surface = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+GAME_WIDTH = surface.get_width()
+GAME_HEIGHT = surface.get_height()
+
 clock = pygame.time.Clock()
 
 
@@ -25,12 +33,8 @@ static_body = space.static_body
 options = pymunk.pygame_util.DrawOptions(surface)
 
 
-drone_balance = drone_balance.Drone_balance(600, 700, RED, space)
-left_wall = wall.Wall((0, 0, 20, GAME_HEIGHT), WHITE, space)
-right_wall = wall.Wall((GAME_WIDTH - 20, 0, 20, GAME_HEIGHT), WHITE, space)
-top_wall = wall.Wall((0, 0, GAME_WIDTH, 20), WHITE, space)
-bottom_wall = wall.Wall((0, GAME_HEIGHT - 20, GAME_WIDTH, GAME_HEIGHT), WHITE, space)
-
+drone_balance = drone_balance.Drone_balance(GAME_WIDTH // 2, GAME_HEIGHT // 2, surface, space)
+walls = walls.Walls(surface, space)
 # Min, Max, step, Init
 blance_pid_slider_values = [
     [-10, 10, 0.5, 0],#Setpoint
@@ -41,19 +45,21 @@ blance_pid_slider_values = [
 
 althold_pid_slider_values = [
     [0, GAME_HEIGHT, 1, GAME_HEIGHT // 2],#Setpoint
-    [0, 10, 0.01, 5],#P
-    [0, 1, 0.01, 0.25],#I
-    [0, 1, 0.01, 0.25]#D
+    [0, 50, 0.01, 5],#P
+    [0, 20, 0.01, 0.25],#I
+    [0, 10, 0.01, 0.25]#D
     ]
 
-balance_pid_ui = ui.UI(surface, 50, 50, "Balance Pid", blance_pid_slider_values)
-althold_pid_ui = ui.UI(surface, 600, 50, "Althold Pid", althold_pid_slider_values)
+balance_pid_ui = ui.UI(surface, int(GAME_WIDTH * 0.03), int(GAME_HEIGHT * 0.03), "Balance Pid", blance_pid_slider_values)
+althold_pid_ui = ui.UI(surface, int(GAME_WIDTH * 0.35), int(GAME_HEIGHT * 0.03), "Althold Pid", althold_pid_slider_values)
 
 # sp, p, i, d = balance_pid_ui.get_values()
-
-
 balance_pid = PID_controller.PID_Controller(balance_pid_ui.get_values(), -10000, 10000)
 althold_pid = PID_controller.PID_Controller(althold_pid_ui.get_values(), -10000, 10000)
+
+
+objects = [drone_balance, walls, balance_pid_ui, althold_pid_ui]
+
 
 def main():
     running = True
@@ -74,6 +80,15 @@ def main():
                     drone_balance.reset()
                 if event.key == pygame.K_q:
                     running = False
+
+
+            if event.type == pygame.VIDEORESIZE:
+                screen_width, screen_height = event.w, event.h
+                surface = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+
+                for obj in objects:
+                    obj.screen_resize(surface, space)
+
 
         # if event.type == pygame.MOUSEBUTTONDOWN:
         #     drone_balance.body.apply_impulse_at_local_point((10, 0), (0, -255))
@@ -98,7 +113,7 @@ def draw():
 
 
 def update(events):
-    pygame.display.set_caption(f"Drone Y:{drone_balance.body.position.y:0.2f}")
+    pygame.display.set_caption(f"Drone Y:{GAME_HEIGHT - drone_balance.body.position.y:0.2f}")
     drone_balance.update()
     althold_pid_ui.update(events)
     balance_pid_ui.update(events)

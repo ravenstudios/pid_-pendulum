@@ -1,26 +1,22 @@
 import pygame
 import pymunk
-from constants import *
+# from constants import *
 import math
 import random
 
 
 class Drone_balance:
-    def __init__(self, x, y, color, space):
+    def __init__(self, x, y, surface, space):
         self.x = x
         self.y = y
-        self.initial_x = self.x
-        self.initial_y = self.y
         self.initial_angle = 0
-        self.color = color
 
-
+        self.GAME_WIDTH = surface.get_width()
+        self.GAME_HEIGHT = surface.get_height()
         self.max_vel = 200
 
-
-        self.radius = 40
-        self.arm_length = 255
-
+        self.radius = self.GAME_WIDTH * self.GAME_HEIGHT * 0.00002
+        self.arm_length = self.GAME_WIDTH * self.GAME_HEIGHT * 0.00015
 
         self.body = pymunk.Body()
         self.body.position = (self.x, self.y)
@@ -55,7 +51,7 @@ class Drone_balance:
 
 
     def balance(self, move):
-        if self.body.position.y > GAME_HEIGHT // 3:
+        if self.body.position.y > self.GAME_HEIGHT // 3:
             if move > 0:
                 self.body.apply_force_at_local_point((0, -abs(move) * self.force_magnitude), (-self.arm_length, 0))
             else:
@@ -73,20 +69,12 @@ class Drone_balance:
 
 
     def update(self):
-        # Example control: Move left or right
-
-
         if pygame.key.get_pressed()[pygame.K_LEFT]:
             # self.rotation_center_body.position -= (self.force_magnitude, 0)
             self.body.apply_force_at_local_point((0, -self.force_magnitude * 300), (-self.arm_length, 0))
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             # self.rotation_center_body.position += (self.force_magnitude, 0)
             self.body.apply_force_at_local_point((0, -self.force_magnitude * 300), (self.arm_length, 0))
-
-        # if self.body.position.y > GAME_HEIGHT  * 0.7:
-        #     self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.left_arm_length, 0))
-        #     self.body.apply_force_at_local_point((0, -self.force_magnitude * 0.3), (self.right_arm_length, 0))
-
 
 
     def reset(self):
@@ -97,35 +85,50 @@ class Drone_balance:
         self.body.angle = self.initial_angle
 
         # Reset the pivot position
-        self.body.position = (self.initial_x, self.initial_y)
+        self.body.position = (int(self.GAME_WIDTH // 2), int(self.GAME_HEIGHT // 2))
 
 
 
-    def draw(self, surface):
-        # Offset used when creating the circle
-        offset = pymunk.Vec2d(0, self.left_arm_length)
+    def screen_resize(self, surface, space):
+        try:
+            self.GAME_WIDTH = int(surface.get_width())
+            self.GAME_HEIGHT = int(surface.get_height())
 
-        # Rotate the offset by the body's current angle
-        rotated_offset = offset.rotated(self.body.angle)
+            space.remove(self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.body_vis)
 
-        # Calculate the bob's position
-        bob_position = self.body.position + rotated_offset
 
-        # Draw bob
-        self.center = (int(bob_position.x), int(bob_position.y))
-        pygame.draw.circle(surface, self.color, self.center, self.radius, width=0)
+            self.left_arm.mass = 10
+            self.left_motor.mass = 100
+            self.left_motor.elasticity = 0.3
+            self.left_motor.friction = 0
 
-        # Draw Pivot
-        self.center = (int(self.rotation_center_body.position.x), int(self.rotation_center_body.position.y))
-        pygame.draw.circle(surface, self.color, self.center, self.radius / 2, width=0)
+            self.right_arm.mass = 10
+            self.right_motor.mass = 100
+            self.right_motor.elasticity = 0.3
+            self.right_motor.friction = 0
 
-        # Draw left_arm
-        left_arm_start = self.body.position + self.left_arm.a.rotated(self.body.angle)
-        left_arm_end = self.body.position + self.left_arm.b.rotated(self.body.angle)
+            self.radius = self.GAME_WIDTH * self.GAME_HEIGHT * 0.00002
+            self.arm_length = int(self.GAME_WIDTH * self.GAME_HEIGHT * 0.00015)
 
-        # Convert to integers for pygame
-        left_arm_start_int = (int(left_arm_start.x), int(left_arm_start.y))
-        left_arm_end_int = (int(left_arm_end.x), int(left_arm_end.y))
 
-        # Draw the line representing the left_arm
-        pygame.draw.line(surface, BLUE, left_arm_start_int, left_arm_end_int, int(self.left_arm.radius))
+
+            self.body_vis = pymunk.Circle(self.body, self.radius // 2, (0, 0))
+            # Define the left_arm and bob of the pendulum
+            self.left_arm = pymunk.Segment(self.body, (0, 0), (-self.arm_length, 0), 5)
+            self.left_motor = pymunk.Circle(self.body, self.radius, (-self.arm_length, 0))
+
+            self.right_arm = pymunk.Segment(self.body, (0, 0), (self.arm_length, 0), 5)
+
+            self.right_motor = pymunk.Circle(self.body, self.radius, (self.arm_length, 0))
+            print(f"self.radius:{self.right_motor.radius}, self.arm_length:{self.right_motor.offset}")
+            print(f"self.radius:{self.left_motor.radius}, self.arm_length:{self.left_motor.offset}")
+
+
+            space.add(self.left_arm, self.left_motor, self.right_arm, self.right_motor, self.body_vis)
+            # self.body.position = (int(self.GAME_WIDTH // 2), int(self.GAME_HEIGHT // 2))
+            # import pdb; pdb.set_trace()
+
+        except Exception as e:
+            print(f"Error during resizing: {e}")
+            raise
+            exit()

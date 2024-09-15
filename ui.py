@@ -10,15 +10,18 @@ class UI():
     def __init__(self, surface, x, y, title, slider_values):
         self.x = x
         self.y = y
+        self.GAME_WIDTH = surface.get_width() #1680
+        self.GAME_HEIGHT = surface.get_height()#1050
         self.title_text = title
-        self.width = 100
-        self.height = 20
-        self.y_gap = 40
-        self.x_gap = 130
-        self.font_size = 20
-        self.txt_length = 200
-        self.txt_height = 40
-        self.slider_y_gap = 10
+
+        self.width = int(self.GAME_WIDTH * 0.06)
+        self.height = int(self.GAME_HEIGHT * 0.02)
+        self.y_gap = int(self.GAME_HEIGHT * 0.04)
+        self.x_gap = int(self.GAME_WIDTH * 0.08)
+        self.font_size = int(self.GAME_HEIGHT * 0.02)
+        self.txt_length = int(self.GAME_WIDTH * 0.12)
+        self.txt_height = int(self.GAME_HEIGHT * 0.04)
+        self.slider_y_gap = int(self.GAME_HEIGHT * 0.01)
 
 
 
@@ -77,3 +80,9 @@ class UI():
         self.d_output.setText(f"D Output: {values['D']:0.2f}")
         self.out_output.setText(f" Output: {values['output']:0.2f}")
         self.error.setText(f" Error: {values['error']:0.2f}")
+
+
+
+    def screen_resize(self, surface, space):
+        self.GAME_WIDTH = surface.get_width()
+        self.GAME_HEIGHT = surface.get_height()
