@@ -50,8 +50,8 @@ althold_pid_slider_values = [
     [0, 10, 0.01, 0.25]#D
     ]
 
-balance_pid_ui = ui.UI(surface, int(GAME_WIDTH * 0.03), int(GAME_HEIGHT * 0.03), "Balance Pid", blance_pid_slider_values)
-althold_pid_ui = ui.UI(surface, int(GAME_WIDTH * 0.35), int(GAME_HEIGHT * 0.03), "Althold Pid", althold_pid_slider_values)
+balance_pid_ui = ui.UI(surface, 0, "Balance Pid", blance_pid_slider_values)
+althold_pid_ui = ui.UI(surface, 1, "Althold Pid", althold_pid_slider_values)
 
 # sp, p, i, d = balance_pid_ui.get_values()
 balance_pid = PID_controller.PID_Controller(balance_pid_ui.get_values(), -10000, 10000)
@@ -84,10 +84,15 @@ def main():
 
             if event.type == pygame.VIDEORESIZE:
                 screen_width, screen_height = event.w, event.h
+                screen_height = (screen_width / 16) * 9
                 surface = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 
                 for obj in objects:
                     obj.screen_resize(surface, space)
+                althold_pid_ui.slider_values[0] = [0, screen_width, 1, screen_height // 2]
+                althold_pid_ui.update(events)
+                balance_pid_ui.update(events)
+
 
 
         # if event.type == pygame.MOUSEBUTTONDOWN:
